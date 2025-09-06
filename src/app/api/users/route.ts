@@ -1,0 +1,20 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectToDatabase from "@/app/lib/mongodb";
+import { User } from "@/app/models/User";
+
+export async function GET(req: NextRequest) {
+  await connectToDatabase();
+
+  const users = await User.find({});
+  return NextResponse.json(users);
+}
+
+export async function POST(req: NextRequest) {
+  await connectToDatabase();
+
+  const body = await req.json();
+  const newUser = new User(body);
+  await newUser.save();
+
+  return NextResponse.json(newUser);
+}
