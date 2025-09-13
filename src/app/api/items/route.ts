@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     const quantity = Number(formData.get("quantity"));
     const file = formData.get("image") as File;
 
+    if (!file) {
+        return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
@@ -29,6 +34,7 @@ export async function POST(req: NextRequest) {
         }
     );
 
+    // const uploadRes = {url: "test",public_id: "testid" }
 const newItem = new Item({
     name,
     description,
