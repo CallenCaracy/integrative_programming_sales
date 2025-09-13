@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
-import { Item } from "@/models/Items";
+import { Item } from "@/models/DbModels/Items";
 
 const folderName = "IntegrativeProgramming";
 
@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    if (!file) {
+        throw new Error("No file uploaded");
+    }
 
     const uploadRes = await new Promise<{ url: string; public_id: string }>(
         (resolve, reject) => {
@@ -34,7 +38,7 @@ const newItem = new Item({
     description,
     price,
     quantity,
-    images: [uploadRes], // store Cloudinary URL + public_id
+    images: [uploadRes],
 });
 await newItem.save();
 

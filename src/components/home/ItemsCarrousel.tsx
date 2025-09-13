@@ -1,10 +1,12 @@
+
 import {useEffect, useState} from "react";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel";
 import {Card, CardContent} from "@/components/ui/card";
-
+import Image from "next/image";
 interface Item {
     _id: string;
     name: string;
+    sellerName: string | "default";
     description: string;
     price: number;
     quantity: number;
@@ -41,14 +43,18 @@ const [loading, setLoading] = useState(false);
                             <Card className="p-2">
                                 <CardContent className="flex flex-col items-center justify-center gap-2">
                                     {item.images?.[0] && (
-                                        <img
-                                            src={item.images[0].url}
-                                            alt={item.name}
-                                            className="w-32 h-32 object-cover rounded-md"
-                                        />
+                                        <div className="relative w-32 h-32">
+                                            <Image
+                                                src={item.images[0].url}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover rounded-md"
+                                            />
+                                        </div>
                                     )}
                                     <h3 className="text-lg font-semibold">{item.name}</h3>
                                     <p className="text-sm text-gray-500">{item.description}</p>
+                                    <p className="text-sm text-gray-500">Sold By: {item.sellerName}</p>
                                     <p className="font-bold">₱{item.price}</p>
                                 </CardContent>
                             </Card>
