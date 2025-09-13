@@ -17,6 +17,7 @@ export function AddItemForm() {
         e.preventDefault();
         setLoading(true);
 
+        const form = e.currentTarget;
         const formData = new FormData(e.currentTarget);
 
         try {
@@ -41,7 +42,7 @@ export function AddItemForm() {
 
             const data = await res.json();
             // success: clear form, refresh UI, whatever you want
-            e.currentTarget.reset();
+            form.reset(); 
             router.refresh();
         } catch (err) {
             console.error("Error submitting item:", err);
