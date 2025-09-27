@@ -5,21 +5,16 @@ import Image from "next/image";
 import logo from "@/../public/assets/shopping_cart.svg"
 import {AiOutlineShoppingCart} from "react-icons/ai";
 import {Button} from "@/components/ui/button";
+import { UseAuthHook } from "@/hooks/auth";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
-
-    async function handleLogout() {
-        try {
-            await fetch("/api/auth/logout", {
-            method: "POST",
-            credentials: "include",
-            });
-
-            window.location.replace("/login");
-        } catch (err) {
-            console.error("Logout failed", err);
-        }
-    }
+    const router = useRouter();
+    const { handleLogout } = UseAuthHook();
+    const onLogout = async () => {
+        await handleLogout();
+        router.push('/login');
+    }    
 
 
     return (
@@ -46,7 +41,7 @@ export default function Navbar() {
                     </a>
                 </Button>
                 <Button
-                    onClick={handleLogout}
+                    onClick={onLogout}
                     className="bg-white text-black hover:bg-accent w-30 h-14 text-xl"
                     >
                     Logout
