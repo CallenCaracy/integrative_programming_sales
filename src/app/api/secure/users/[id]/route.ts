@@ -2,22 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { User } from "@/models/User";
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    await connectToDatabase();
-
-    const { id } = await params;
-
-    const user = await User.findById(id);
-    if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(user);
-}
-
 export async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
