@@ -5,15 +5,16 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  credit: Number;
+  credit?: Number;
   createdAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const UserSchema: Schema<IUser> = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true},
-  credit: { type: Number, required: true },
+  credit: { type: Number, required: true, default: 100 },
   createdAt: { type: Date, default: Date.now },
 });
 

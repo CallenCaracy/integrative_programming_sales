@@ -21,7 +21,7 @@ export function AddItemForm() {
         const formData = new FormData(e.currentTarget);
 
         try {
-            const res = await fetch("/api/items", {
+            const res = await fetch("/api/secure/items", {
                 method: "POST",
                 body: formData,
             });

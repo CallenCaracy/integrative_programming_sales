@@ -18,7 +18,7 @@ const [loading, setLoading] = useState(false);
         async function fetchItems() {
             try {
                 setLoading(true);
-                const res = await fetch("/api/items", { cache: "no-store" });
+                const res = await fetch("/api/secure/items", { cache: "no-store" });
                 const data = await res.json();
                 setItems(data);
             } catch (err) {
