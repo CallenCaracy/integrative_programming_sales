@@ -5,12 +5,20 @@ import {useState} from "react";
 import {Button} from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
 import {ItemsCarrousel} from "@/components/home/ItemsCarrousel";
+import { useAuth } from "@/context/authContext";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+    const { isLoggedIn } = useAuth();
+    const router = useRouter();
     const [formShowed, setFormShowed] = useState<boolean>(false);
 
     const handleFormShow = (show: boolean) => {
         setFormShowed(show);
+    }
+
+    if (!isLoggedIn) {
+        router.push('/login');
     }
 
     return (
