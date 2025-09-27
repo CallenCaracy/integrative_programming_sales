@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Toaster } from "sonner";
+import PageTransition from "@/components/PageTransition";
+import StairTranstition from "@/components/StairEffect";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,8 +33,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <div className="mx-auto p-5 px-20">
+          <Toaster position="top-right" richColors/>
           <Navbar />
-          {children}
+          <StairTranstition />
+          <PageTransition>
+            {children}
+          </PageTransition>
           <Footer/>
       </div>
       </body>
