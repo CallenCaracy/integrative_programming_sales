@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       maxAge: 15 * 60,
       path: "/",
     });
-
+    console.log("Refresh OK")
     return res;
   } catch (err) {
     console.error("Refresh failed", err);

@@ -7,13 +7,16 @@ type User = {
   _id: string;
   email: string;
   name: string;
+  access: {
+    token: string, 
+    refreshToken: string,
+  }
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
-  loggedIn: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (data: { name: string; email: string; password: string }) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -25,26 +28,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(false);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          console.log("Not signed in yet! Current user: ", user)
-        }
-      } catch (err) {
-        console.error("Auth check failed:", err);
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Current user: ", data);
+        setUser(data.currentUser);
+      } else {
+        console.log("Not signed in yet!");
       }
-    };
-    fetchUser();
-  }, []);
+    } catch (err) {
+      console.error("Auth check failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchUser();
+}, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -59,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetch("/api/auth/me", { credentials: "include" });
         if (me.ok) {
           const data = await me.json();
-          setUser(data.user);
+          setUser(data.currentUser);
         }
         return true;
       }
@@ -100,29 +103,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    try {
-      const refresh = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (refresh.ok) {
-        const me = await fetch("/api/auth/me", { credentials: "include" });
-        if (me.ok) {
-          const data = await me.json();
-          setUser(data.user);
-          setLoggedIn(true);
-          return;
-        }
+  try {
+    const refresh = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    if (refresh.ok) {
+      const me = await fetch("/api/auth/me", { credentials: "include" });
+      if (me.ok) {
+        const data = await me.json();
+        console.log("Refresh response:", data);
+        setUser(data.currentUser);
+        return;
       }
-      setUser(null);
-      setLoggedIn(false);
-    } catch (err) {
-      console.error("refreshUser failed:", err);
-      setUser(null);
-      setLoggedIn(false);
     }
-  };
+    setUser(null);
+  } catch (err) {
+    console.error("refreshUser failed:", err);
+    setUser(null);
+  }
+};
+
 
   useEffect(() => {
     refreshUser(); 
@@ -137,7 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
-        loggedIn,
       }}
     >
       {!loading && children}

@@ -1,57 +1,56 @@
-"use client"
+"use client";
 
-import {AddItemForm} from "@/components/home/AddItemForm";
-import {useEffect, useState} from "react";
-import {Button} from "@/components/ui/button";
-import { X, Plus } from "lucide-react";
-import {ItemsCarrousel} from "@/components/home/ItemsCarrousel";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import AddItemButton from "@/components/home/AddItemButton";
+import AddItemModal from "@/components/home/AddItemModal";
+import HomeLayout from "@/components/home/HomeLayout";
+
+import SidebarFilters from "@/components/home/SideBarFillers";
+import CategoryTabs from "@/components/home/CategoryTabs";
+import ProductGrid from "@/components/home/ProductGrid";
+import Loader from "@/components/loader/Loader";
 
 export default function Home() {
-    const { loggedIn } = useAuth();
-    const router = useRouter();
-    const [formShowed, setFormShowed] = useState<boolean>(false);
+  const { authenticated, loading } = useAuth();
+  const router = useRouter();
+  const [formShowed, setFormShowed] = useState(false);
 
-    const handleFormShow = (show: boolean) => {
-        setFormShowed(show);
+  useEffect(() => {
+    if (!authenticated) {
+      toast.error("Unauthorized Access");
+      router.push("/login");
     }
-    useEffect(() => {
-        if (!loggedIn) {
-            toast.error("Unauthorized Access")
-            router.push('/login');
-        }
-    }, [router, loggedIn])
+  }, [router, authenticated]);
 
-    return (
-        <div className="bg-accent/20 max-w-full h-screen flex flex-col p-4">
-            <div className="flex justify-center items-center">
-                <h1 className="text-6xl">WELCOME TO CLARENCE SUPERMARKET</h1>
-            </div>
-            {!formShowed && (
-                <div className="flex justify-end p-6">
-                    <Button onClick={()=> handleFormShow(true)}>
-                        <Plus className="w-5 h-5 " />
-                    </Button>
-                </div>
-            )}
-            {formShowed && (
-                <div className="relative max-w-lg mx-auto mt-6">
-                    <button
-                        title="add"
-                        onClick={() => handleFormShow(false)}
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+  if (loading) {
+    return <Loader />;
+  }
 
-                    <AddItemForm />
-                </div>
-            )}
-            <div className="flex justify-center items-end p-6">
-                <ItemsCarrousel />
-            </div>
+  return (
+    <HomeLayout>
+      <div className="flex justify-end p-6">
+        <AddItemButton onClick={() => setFormShowed(true)} />
+      </div>
+
+      {formShowed && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <AddItemModal onClose={() => setFormShowed(false)} />
         </div>
-    )
+      )}
+
+      <div className="flex gap-6 p-6">
+        <aside className="w-64 shrink-0">
+          <SidebarFilters />
+        </aside>
+
+        <main className="flex-1">
+          <CategoryTabs />
+          <ProductGrid />
+        </main>
+      </div>
+    </HomeLayout>
+  );
 }

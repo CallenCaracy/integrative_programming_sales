@@ -2,111 +2,188 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/context/authContext"; 
 
+const itemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  price: z.number().positive("Price must be > 0"),
+  quantity: z.number().int().positive("Quantity must be > 0"),
+  image: z
+    .any()
+    .refine((file) => file instanceof File, "Image is required"),
+});
+
+type ItemFormValues = z.infer<typeof itemSchema>;
 
 export function AddItemForm() {
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+  const { user } = useAuth();
+  const sellerId = user?._id; 
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        setLoading(true);
+  const form = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      quantity: 1,
+      image: undefined,
+    },
+  });
 
-        const form = e.currentTarget;
-        const formData = new FormData(e.currentTarget);
-
-        try {
-            const res = await fetch("/api/secure/items", {
-                method: "POST",
-                body: formData,
-            });
-            if (!res.ok) {
-                const contentType = res.headers.get("content-type") ?? "";
-                let bodyText = "";
-                if (contentType.includes("application/json")) {
-                    const json = await res.json();
-                    bodyText = json?.error ?? json?.message ?? JSON.stringify(json);
-                } else {
-                    bodyText = await res.text();
-                }
-
-                throw new Error(
-                    `Request failed (${res.status} ${res.statusText}) — ${bodyText}`
-                );
-            }
-
-            const data = await res.json();
-            // success: clear form, refresh UI, whatever you want
-            form.reset(); 
-            router.refresh();
-        } catch (err) {
-            console.error("Error submitting item:", err);
-        } finally {
-            setLoading(false);
-        }
+  async function onSubmit(values: ItemFormValues) {
+    if (!sellerId) {
+      console.error("No sellerId found, user not logged in?");
+      return;
     }
 
-    return (
-        <Card className="max-w-lg mx-auto">
-            <CardHeader>
-                <CardTitle>Add a New Item</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <Label htmlFor="name">Item Name</Label>
-                        <Input id="name" name="name" required />
-                    </div>
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("price", values.price.toString());
+      formData.append("quantity", values.quantity.toString());
+      formData.append("image", values.image);
+      formData.append("sellerId", sellerId); 
 
-                    <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            className="placeholder:text-white/60"
-                            id="description"
-                            name="description"
-                            required
-                            placeholder="Add a Description"
-                            rows={4} />
-                    </div>
+      const res = await fetch("/api/secure/items", {
+        method: "POST",
+        body: formData,
+      });
 
-                    <div>
-                        <Label htmlFor="price">Price</Label>
-                        <Input
-                            id="price"
-                            name="price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                        />
-                    </div>
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json?.error ?? "Failed to create item");
+      }
 
-                    <div>
-                        <Label htmlFor="quantity">Quantity</Label>
-                        <Input
-                            id="quantity"
-                            name="quantity"
-                            type="number"
-                            step="1"
-                            min="1"
-                            required
-                        />
-                    </div>
+      const data = await res.json();
+      console.log("Item created:", data);
 
-                    <div>
-                        <Label htmlFor="image">Item Image</Label>
-                        <Input id="image" name="image" type="file" accept="image/*" required />
-                    </div>
-                    <Button type="submit" disabled={loading} className="w-full">
-                        {loading ? "Uploading..." : "Add Item"}
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
-    );
+      form.reset();
+      router.refresh();
+    } catch (err) {
+      console.error("Error submitting item:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="max-w-lg mx-auto">
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Item Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter item name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Add a description" rows={4} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Price</FormLabel>
+                  <FormControl>
+                    <Input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    {...field} 
+                    onChange={e => field.onChange(Number(e.target.value))}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity</FormLabel>
+                  <FormControl>
+                    <Input 
+                    type="number" 
+                    step="1" 
+                    min="1" {...field} 
+                    onChange={e => field.onChange(Number(e.target.value))}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Item Image</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          field.onChange(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Uploading..." : "Add Item"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
 }

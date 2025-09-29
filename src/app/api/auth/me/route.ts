@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 export async function GET(req: NextRequest) {
   await connectToDatabase();
   const token = req.cookies.get("token")?.value;
-
+  const refreshToken = req.cookies.get("refreshToken")?.value;
   if (!token) {
     return NextResponse.json({ user: null }, { status: 401 });
   }
@@ -17,10 +17,17 @@ export async function GET(req: NextRequest) {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const user = await User.findById(decoded.userId).select("-password");
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json({ currentUser: null }, { status: 401 });
     }
-    return NextResponse.json({ user });
+    const currentUser = {
+      user, 
+      access: {
+        token,
+        refreshToken
+      }
+    }
+    return NextResponse.json({ currentUser });
   } catch {
-    return NextResponse.json({ user: null }, { status: 401 });
+    return NextResponse.json({ currentUser: null }, { status: 401 });
   }
 }
