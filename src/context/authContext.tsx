@@ -13,10 +13,10 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
+  loggedIn: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (data: { name: string; email: string; password: string }) => Promise<boolean>;
   logout: () => Promise<void>;
-  isLoggedIn:() => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
+        } else {
+          console.log("Not signed in yet! Current user: ", user)
         }
       } catch (err) {
         console.error("Auth check failed:", err);
@@ -96,7 +99,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const isLoggedIn = () => !!user;
+  const refreshUser = async () => {
+    try {
+      const refresh = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (refresh.ok) {
+        const me = await fetch("/api/auth/me", { credentials: "include" });
+        if (me.ok) {
+          const data = await me.json();
+          setUser(data.user);
+          setLoggedIn(true);
+          return;
+        }
+      }
+      setUser(null);
+      setLoggedIn(false);
+    } catch (err) {
+      console.error("refreshUser failed:", err);
+      setUser(null);
+      setLoggedIn(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshUser(); 
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -107,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
-        isLoggedIn,
+        loggedIn,
       }}
     >
       {!loading && children}

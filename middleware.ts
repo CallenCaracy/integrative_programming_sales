@@ -1,13 +1,23 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
- 
-// This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
-  return NextResponse.redirect(new URL('/login', request.url))
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import jwt from "jsonwebtoken";
+
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("token")?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET!);
+    return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 }
- 
-// See "Matching Paths" below to learn more
+
+// Protect /dashboard
 export const config = {
-  matcher: '/:path*',
-  runtime: "edge",
-}
+  matcher: ["/dashboard/:path*"],
+};

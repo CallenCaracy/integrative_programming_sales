@@ -1,25 +1,28 @@
 "use client"
 
 import {AddItemForm} from "@/components/home/AddItemForm";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
 import {ItemsCarrousel} from "@/components/home/ItemsCarrousel";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Home() {
-    const { isLoggedIn } = useAuth();
+    const { loggedIn } = useAuth();
     const router = useRouter();
     const [formShowed, setFormShowed] = useState<boolean>(false);
 
     const handleFormShow = (show: boolean) => {
         setFormShowed(show);
     }
-
-    if (!isLoggedIn) {
-        router.push('/login');
-    }
+    useEffect(() => {
+        if (!loggedIn) {
+            toast.error("Unauthorized Access")
+            router.push('/login');
+        }
+    }, [router, loggedIn])
 
     return (
         <div className="bg-accent/20 max-w-full h-screen flex flex-col p-4">
