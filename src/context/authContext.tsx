@@ -7,6 +7,10 @@ type User = {
   _id: string;
   email: string;
   name: string;
+  access: {
+    token: string, 
+    refreshToken: string,
+  }
 };
 
 type AuthContextType = {
@@ -16,7 +20,6 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (data: { name: string; email: string; password: string }) => Promise<boolean>;
   logout: () => Promise<void>;
-  isLoggedIn:() => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,22 +29,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        }
-      } catch (err) {
-        console.error("Auth check failed:", err);
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Current user: ", data);
+        setUser(data.currentUser);
+      } else {
+        console.log("Not signed in yet!");
       }
-    };
-    fetchUser();
-  }, []);
+    } catch (err) {
+      console.error("Auth check failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchUser();
+}, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -56,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetch("/api/auth/me", { credentials: "include" });
         if (me.ok) {
           const data = await me.json();
-          setUser(data.user);
+          setUser(data.currentUser);
         }
         return true;
       }
@@ -96,7 +102,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const isLoggedIn = () => !!user;
+  const refreshUser = async () => {
+  try {
+    const refresh = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    if (refresh.ok) {
+      const me = await fetch("/api/auth/me", { credentials: "include" });
+      if (me.ok) {
+        const data = await me.json();
+        console.log("Refresh response:", data);
+        setUser(data.currentUser);
+        return;
+      }
+    }
+    setUser(null);
+  } catch (err) {
+    console.error("refreshUser failed:", err);
+    setUser(null);
+  }
+};
+
+
+  useEffect(() => {
+    refreshUser(); 
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -107,7 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
-        isLoggedIn,
       }}
     >
       {!loading && children}

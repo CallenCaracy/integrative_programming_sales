@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { JwtPayload} from "@/models/types/jwt"
 import connectToDatabase from "@/lib/mongodb";
-import jwt from "jsonwebtoken";
+import jwt  from "jsonwebtoken";
 import { User } from "@/models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
+const REFRESH_SECRET = process.env.REFRESH_SECRET!;
 
 export async function POST(req: NextRequest) {
   await connectToDatabase();
@@ -19,16 +21,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
   }
 
-  const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, {
-    expiresIn: "1h",
-  });
+const accessToken = jwt.sign(
+  { userId: (user._id as string).toString(), email: user.email } satisfies JwtPayload,
+  JWT_SECRET,
+  { expiresIn: "15m" }
+);
+
+const refreshToken = jwt.sign(
+  { userId: (user._id as string).toString(), email: user.email } satisfies JwtPayload,
+  REFRESH_SECRET,
+  { expiresIn: "7d" }
+);
 
   const response = NextResponse.json({ success: true });
 
-  response.cookies.set("token", token, {
+  response.cookies.set("token", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60,
+    maxAge: 15 * 60, // 15 min
+    path: "/",
+  });
+
+  response.cookies.set("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
     path: "/",
   });
 
