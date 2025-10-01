@@ -31,7 +31,7 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
-export function AddItemForm() {
+export function AddItemForm({ onClose }: { onClose?: () => void }) {
   const { user } = useAuth();
   const sellerId = user?._id; 
   const router = useRouter();
@@ -47,7 +47,7 @@ export function AddItemForm() {
       image: undefined,
     },
   });
-
+  console.log("User in add item:" ,user)
   async function onSubmit(values: ItemFormValues) {
     if (!sellerId) {
       console.error("No sellerId found, user not logged in?");
@@ -79,6 +79,7 @@ export function AddItemForm() {
 
       form.reset();
       router.refresh();
+      if (onClose) onClose();
     } catch (err) {
       console.error("Error submitting item:", err);
     } finally {

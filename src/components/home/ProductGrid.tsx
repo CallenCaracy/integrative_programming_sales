@@ -12,9 +12,18 @@ export default function ProductGrid() {
     async function fetchItems() {
       try {
         setLoading(true);
-        const res = await fetch("/api/secure/items", { cache: "no-store" });
-        const data = await res.json();
-        setItems(data);
+        const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+        if (nav.type === "reload") {
+          const res = await fetch("/api/secure/items", { cache: "no-store" });
+          setItems(await res.json());
+          
+        } 
+        const eventSource = new EventSource("/api/secure/items/stream");
+          eventSource.onmessage = async () => {
+            const res = await fetch("/api/secure/items", { cache: "no-store" });
+            setItems(await res.json());
+          };
+          return () => eventSource.close();
       } catch (err) {
         console.error("Error fetching items:", err);
       } finally {

@@ -14,7 +14,7 @@ import ProductGrid from "@/components/home/ProductGrid";
 import Loader from "@/components/loader/Loader";
 
 export default function Home() {
-  const { authenticated, loading } = useAuth();
+  const { authenticated, loading, user } = useAuth();
   const router = useRouter();
   const [formShowed, setFormShowed] = useState(false);
 
@@ -23,7 +23,7 @@ export default function Home() {
       toast.error("Unauthorized Access");
       router.push("/login");
     }
-  }, [router, authenticated]);
+  }, [router, authenticated, user]);
 
   if (loading) {
     return <Loader />;

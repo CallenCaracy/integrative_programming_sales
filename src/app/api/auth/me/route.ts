@@ -16,11 +16,14 @@ export async function GET(req: NextRequest) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const user = await User.findById(decoded.userId).select("-password");
+    console.log("User from db:", user)
     if (!user) {
       return NextResponse.json({ currentUser: null }, { status: 401 });
     }
     const currentUser = {
-      user, 
+      _id: user._id,
+      email: user.email,
+      name: user.name,
       access: {
         token,
         refreshToken

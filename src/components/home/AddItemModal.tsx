@@ -15,7 +15,7 @@ export default function AddItemModal({ onClose }: { onClose: () => void }) {
       </button>
 
       <h2 className="text-2xl font-semibold mb-4">Add New Item</h2>
-      <AddItemForm />
+      <AddItemForm onClose={onClose}/>
     </div>
   );
 }
