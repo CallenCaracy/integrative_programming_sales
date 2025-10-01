@@ -35,7 +35,7 @@ useEffect(() => {
       const res = await fetch("/api/auth/me", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        console.log("Current user: ", data);
+        console.log("User data just fetched:", data.currentUser)
         setUser(data.currentUser);
       } else {
         console.log("Not signed in yet!");
@@ -96,6 +96,7 @@ useEffect(() => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
       setUser(null);
+      console.log("User after logout:", user)
       router.push("/login");
     } catch (err) {
       console.error("Logout failed:", err);

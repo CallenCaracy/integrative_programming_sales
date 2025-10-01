@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-    const { loggedIn, user} = useAuth();
+    const { authenticated, user} = useAuth();
     const router = useRouter();
     useEffect(() => {
         if (user === null) return; 
-        if (!loggedIn) router.push("/login");
+        if (!authenticated) router.push("/login");
         else router.push("/dashboard");
-    }, [router, loggedIn, user]);
+    }, [router, authenticated, user]);
 
 
     return null;
