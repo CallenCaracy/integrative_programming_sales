@@ -4,23 +4,18 @@ import { Item } from "@/models/Items";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } } 
-): Promise<NextResponse> {
-  
-  await connectToDatabase();
-
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = context.params;
-
+    const { id } = await context.params;
     const item = await Item.findById(id);
 
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    return NextResponse.json(item);
-  } catch (err) {
-    console.error("Error fetching item:", err);
+    return NextResponse.json(item, { status: 200 });
+  } catch (error) {
     return NextResponse.json({ error: "Failed to fetch item" }, { status: 500 });
   }
 }
