@@ -4,7 +4,7 @@ import { Item } from "@/models/Items";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } } // force sync
+  context: { params: { id: string } } 
 ): Promise<NextResponse> {
   
   await connectToDatabase();
