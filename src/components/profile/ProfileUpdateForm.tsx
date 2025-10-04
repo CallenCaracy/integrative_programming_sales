@@ -3,38 +3,32 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Profile } from "@/models/types/profile";
+import { useAuth } from "@/context/authContext";
 
-type ProfileUpdateFormProps = {
+export default function ProfileUpdateForm({
+  profileId,
+  currentName,
+  currentCredit,
+}: {
   profileId: string;
   currentName: string;
   currentCredit: number;
-  onUpdated: (updated: Profile) => void;
-};
-
-export default function ProfileUpdateForm({ profileId, currentName, currentCredit, onUpdated }: ProfileUpdateFormProps) {
+}) {
   const [newName, setNewName] = useState(currentName);
   const [creditToAdd, setCreditToAdd] = useState(0);
   const [updating, setUpdating] = useState(false);
 
+  const { updateUser } = useAuth();
+
   async function handleUpdate() {
     setUpdating(true);
     try {
-      const res = await fetch(`/api/secure/users/${profileId}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newName,
-          credit: currentCredit + Number(creditToAdd || 0),
-        }),
+      await updateUser({
+        name: newName,
+        credit: currentCredit + Number(creditToAdd || 0),
       });
 
-      if (res.ok) {
-        const updated = await res.json();
-        onUpdated(updated);
-        setCreditToAdd(0);
-      }
+      setCreditToAdd(0);
     } finally {
       setUpdating(false);
     }

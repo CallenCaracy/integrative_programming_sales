@@ -9,26 +9,76 @@ export default function ProductGrid() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchItems() {
+    let mounted = true;
+    let es: EventSource | null = null;
+    const controller = new AbortController();
+
+    async function fetchAndSubscribe() {
       try {
         setLoading(true);
-        const res = await fetch("/api/secure/items", { cache: "no-store" });
-        setItems(await res.json());
-        
-        const eventSource = new EventSource("/api/secure/items/stream");
-        eventSource.onmessage = async () => {
-          const res = await fetch("/api/secure/items", { cache: "no-store" });
-          setItems(await res.json());
+        const res = await fetch("/api/secure/items", {
+          cache: "no-store",
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          console.error("fetch /api/secure/items failed", res.status);
+          if (!mounted) return;
+          setItems([]);
+          return;
+        }
+
+        const data = await res.json();
+        if (!mounted) return;
+        setItems(data);
+
+        // create SSE (EventSource)
+        // NOTE: { withCredentials: true } is supported in modern browsers for credentials
+        // but if your SSE is same-origin cookies will normally be sent.
+        try {
+          es = new EventSource("/api/secure/items/stream", { withCredentials: true } as any);
+        } catch (err) {
+          // some environments don't accept the second arg; fallback to no-options
+          es = new EventSource("/api/secure/items/stream");
+        }
+
+        es.onmessage = async (e) => {
+          // minimal: re-fetch latest list on each message
+          try {
+            const r = await fetch("/api/secure/items", { cache: "no-store", credentials: "include" });
+            if (r.ok) {
+              const d = await r.json();
+              if (mounted) setItems(d);
+            } else {
+              console.warn("re-fetch failed:", r.status);
+            }
+          } catch (err) {
+            console.error("error refetching items after SSE message:", err);
+          }
         };
 
-        return () => eventSource.close();
-      } catch (err) {
-        console.error("Error fetching items:", err);
+        es.onerror = (ev) => {
+          console.warn("SSE error, closing", ev);
+          try { es?.close(); } catch {}
+        };
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+        } else {
+          console.error("Error fetching items:", err);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
-    fetchItems();
+
+    fetchAndSubscribe();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+      try { es?.close(); } catch {}
+    };
   }, []);
 
   if (loading) return <p className="text-center py-10">Loading items...</p>;

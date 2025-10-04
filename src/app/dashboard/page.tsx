@@ -19,7 +19,7 @@ export default function Home() {
   const [formShowed, setFormShowed] = useState(false);
 
   useEffect(() => {
-    if (!authenticated) {
+    if (!loading && !authenticated) {
       toast.error("Unauthorized Access");
       router.push("/login");
     }
