@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 type CartItemProps = {
   id: string;
   name: string;
@@ -14,17 +15,25 @@ type CartItemProps = {
 export default function CartItemCard({ id, name, price, quantity, image, onRemove }: CartItemProps) {
   const imageUrl = image?.[0]?.url ?? "/placeholder.png";
   const total = price * quantity;
+  const [showImage, setShowImage] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowImage(true), 1900);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="flex items-center gap-6 p-4 border rounded-lg shadow-sm bg-white dark:bg-zinc-900">
-      <div className="relative w-24 h-24 shrink-0">
-        <Image
-          src={imageUrl}
-          alt={name}
-          fill
-          sizes="96px"
-          className="object-contain rounded-md"
-        />
+      <div className="relative w-24 h-24 shrink-0 overflow-hidden">
+        {showImage && (
+          <Image
+            src={imageUrl}
+            alt={name}
+            fill
+            sizes="96px"
+            className="object-contain rounded-md"
+          />
+        )}
       </div>
 
       <div className="flex flex-col flex-1">

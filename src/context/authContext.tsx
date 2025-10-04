@@ -7,6 +7,7 @@ type User = {
   _id: string;
   email: string;
   name: string;
+  credit: number;
   access: {
     token: string, 
     refreshToken: string,
@@ -20,6 +21,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (data: { name: string; email: string; password: string }) => Promise<boolean>;
   logout: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -125,6 +127,27 @@ useEffect(() => {
   }
 };
 
+const updateUser = async (updates: Partial<User>) => {
+  if (!user?._id) return;
+
+  try {
+    const res = await fetch(`/api/secure/users/${user._id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+
+    if (!res.ok) throw new Error("Failed to update user");
+
+    const updated = await res.json();
+
+    setUser((prev) => (prev ? { ...prev, ...updated } : updated));
+
+    console.log("User updated in AuthContext:", updated);
+  } catch (err) {
+    console.error("updateUser failed:", err);
+  }
+};
 
   useEffect(() => {
     refreshUser(); 
@@ -139,6 +162,7 @@ useEffect(() => {
         login,
         signup,
         logout,
+        updateUser,
       }}
     >
       {!loading && children}

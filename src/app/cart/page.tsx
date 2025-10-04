@@ -5,6 +5,7 @@ import { useAuth } from "@/context/authContext";
 import { useCart } from "@/context/cartContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+//
 
 function CartSummary({
   subtotal,
@@ -20,11 +21,24 @@ function CartSummary({
     images: { url: string; public_id: string }[];
   }[];
 }) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const {clearCart} = useCart();
   const router = useRouter();
+  const userCredit = user?.credit ?? 0;
+  const hasEnoughCredit = userCredit >= subtotal;
+
   const handleCompletePurchase = async () => {
     try {
+      if (!user) {
+        toast.error("You must be logged in to complete a purchase.");
+        return;
+      }
+
+      if (!hasEnoughCredit) {
+        toast.error("Insufficient credits to complete purchase!");
+        return;
+      }
+
       console.log("USER ID IN CART:", user?._id)
       const response = await fetch("/api/secure/cart", {
         method: "POST",
@@ -41,6 +55,17 @@ function CartSummary({
         throw new Error(`Failed to complete purchase: ${response.statusText}`);
       }
 
+      const updateRes = await fetch(`/api/secure/users/${user._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credit: user.credit - subtotal }),
+      });
+
+      if (!updateRes.ok) throw new Error("Failed to update user credits");
+
+      const updatedUser = await updateRes.json();
+      await updateUser(updatedUser);
+
       const data = await response.json();
       router.push("/dashboard")
       clearCart();
@@ -54,12 +79,34 @@ function CartSummary({
 
   return (
     <div className="mt-6 p-4 border rounded-lg shadow bg-white dark:bg-zinc-900">
+      <div className="flex justify-between mb-2">
+        <span className="text-lg font-medium">Your Credits</span>
+        <span
+          className={`text-lg font-bold ${
+            hasEnoughCredit ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          ${userCredit.toFixed(2)}
+        </span>
+      </div>
+
       <div className="flex justify-between mb-4">
         <span className="text-lg font-medium">Subtotal</span>
         <span className="text-lg font-bold">${subtotal.toFixed(2)}</span>
       </div>
-      <Button className="w-full" onClick={handleCompletePurchase}>
-        Complete Purchase
+
+      {!hasEnoughCredit && (
+        <p className="text-sm text-red-500 mb-3">
+          Not enough credits! Please top up your balance.
+        </p>
+      )}
+
+      <Button
+        className="w-full"
+        onClick={handleCompletePurchase}
+        disabled={!hasEnoughCredit}
+      >
+        {hasEnoughCredit ? "Complete Purchase" : "Insufficient Credits"}
       </Button>
     </div>
   );

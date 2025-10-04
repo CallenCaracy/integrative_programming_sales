@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       _id: user._id,
       email: user.email,
       name: user.name,
+      credit: user.credit,
       access: {
         token,
         refreshToken
