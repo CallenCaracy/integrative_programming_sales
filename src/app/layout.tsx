@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import StairTranstition from "@/components/StairEffect";
 import { AuthProvider } from "@/context/authContext";
+import { CartProvider } from "@/context/cartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,12 +37,14 @@ export default function RootLayout({
       <div className="mx-auto p-5 px-20">
           <Toaster position="top-right" richColors/>
           <AuthProvider>
+          <CartProvider>
           <Navbar />
           <StairTranstition />
           <PageTransition>
               {children}
           </PageTransition>
           <Footer/>
+          </CartProvider>
           </AuthProvider>
       </div>
       </body>

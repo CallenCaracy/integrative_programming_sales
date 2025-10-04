@@ -1,10 +1,7 @@
+import { Profile } from "@/models/types/profile";
+
 type ProfileDetailsProps = {
-  profile: {
-    name: string;
-    email: string;
-    credit: number;
-    createdAt: string;
-  };
+  profile: Profile;
 };
 
 export default function ProfileDetails({ profile }: ProfileDetailsProps) {
