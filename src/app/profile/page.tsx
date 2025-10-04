@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import ProfileDetails from "@/components/home/ProfileDetails";
-import ProfileUpdateForm from "@/components/home/ProfileUpdateForm";
+import ProfileDetails from "@/components/profile/ProfileDetails";
+import ProfileUpdateForm from "@/components/profile/ProfileUpdateForm";
+import { Profile } from "@/models/types/profile";
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

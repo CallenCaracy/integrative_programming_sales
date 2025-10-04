@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Profile } from "@/models/types/profile";
 
 type ProfileUpdateFormProps = {
   profileId: string;
   currentName: string;
   currentCredit: number;
-  onUpdated: (updated: any) => void;
+  onUpdated: (updated: Profile) => void;
 };
 
 export default function ProfileUpdateForm({ profileId, currentName, currentCredit, onUpdated }: ProfileUpdateFormProps) {

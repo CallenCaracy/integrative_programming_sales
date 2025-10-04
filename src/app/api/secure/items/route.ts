@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
     { status: 500 }
   );
 }
-
 }
 
 export async function GET() {
