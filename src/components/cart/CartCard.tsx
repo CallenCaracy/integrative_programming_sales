@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 type CartItemProps = {
-  id: string;
+  id: number;
   name: string;
   price: number;
   quantity: number;
-  image?: { url: string }[];
+  image?: string;
   onRemove: () => void;
 };
 
 export default function CartItemCard({ id, name, price, quantity, image, onRemove }: CartItemProps) {
-  const imageUrl = image?.[0]?.url ?? "/placeholder.png";
+  const isValidUrl = (url: string) => /^https?:\/\/.+\.(jpg|jpeg|png|webp|avif)$/i.test(url);
+  const imageUrl = image && isValidUrl(image) ? image : "/placeholder_image.png";
   const total = price * quantity;
   const [showImage, setShowImage] = useState(false);
 

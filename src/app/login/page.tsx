@@ -20,7 +20,7 @@ import { UseAuthHook } from "@/hooks/auth";
 import { toast } from "sonner";
 
 const loginSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
+  username: z.string({ message: "Invalid username address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -67,12 +67,12 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email</FormLabel>  
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="text" placeholder="JohnDoe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -97,10 +97,7 @@ export default function LoginPage() {
             </form>
           </Form>
           <p className="text-sm text-center mt-4">
-            Don’t have an account?{" "}
-            <a href="/signup" className="text-blue-600 hover:underline">
-              Sign up
-            </a>
+            Don’t have an account? Too bad.
           </p>
         </CardContent>
       </Card>
