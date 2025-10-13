@@ -4,33 +4,34 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { CartItem, useCart } from "@/context/cartContext";
-import { DisplayItem } from "@/models/types/uiItem";
+import { CartProduct, useCart } from "@/context/cartContext";
+import { Product } from "@/models/types/products";
 import { toast } from "sonner";
 
 export default function ItemDetailsModal({
-  item,
+  product,
   onClose,
 }: {
-  item: DisplayItem;
+  product: Product;
   onClose: () => void;
 }) {
-  const imageUrl = item.images[0]?.url ?? "/placeholder.png";
+  const isValidUrl = (url: string) => /^https?:\/\/.+\.(jpg|jpeg|png|webp|avif)$/i.test(url);
+  const imageUrl = product.image && isValidUrl(product.image) ? product.image : "/placeholder_image.png";
   const [count, setCount] = useState(1);
-  const totalPrice = count * item.price;
-  const {addItem} = useCart();
+  const totalPrice = count * product.price;
+  const {addProduct} = useCart();
 
   const handleAddToCart = () => {
     try {
-      const newCartItem: CartItem = {
-      name: item.name, 
-      itemId: item._id, 
-      price: item.price, 
-      quantity: count, 
-        sellerId: item.sellerId,
-        images: item.images
+      const newCartItem: CartProduct = {
+        name: product.name, 
+        productID: product.id, 
+        price: product.price, 
+        quantity: count, 
+        seller: product.createdBy,
+        image: product.image
       }
-      addItem(newCartItem)
+      addProduct(newCartItem)
       toast.success("Item succesfully added to cart")
       onClose();
     } catch (error) {
@@ -55,7 +56,7 @@ export default function ItemDetailsModal({
           <div className="relative w-full h-96 bg-muted rounded-lg overflow-hidden">
             <Image
               src={imageUrl}
-              alt={item.name}
+              alt={product.name}
               fill
               className="object-contain"
             />
@@ -63,18 +64,18 @@ export default function ItemDetailsModal({
 
           {/* Details */}
           <div className="flex flex-col space-y-4">
-            <h1 className="text-2xl font-bold">{item.name}</h1>
-            <p className="text-muted-foreground">{item.description}</p>
-            <p className="text-xl font-semibold">${item.price.toFixed(2)}</p>
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            <p className="text-muted-foreground">{product.description}</p>
+            <p className="text-xl font-semibold">${product.price.toFixed(2)}</p>
             <p
-              className={item.quantity > 0 ? "text-green-600" : "text-red-600"}
+              className={product.quantity > 0 ? "text-green-600" : "text-red-600"}
             >
-              {item.quantity > 0
-                ? `In Stock (${item.quantity})`
+              {product.quantity > 0
+                ? `In Stock (${product.quantity})`
                 : "Out of Stock"}
             </p>
 
-            {item.quantity > 0 && (
+            {product.quantity > 0 && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Quantity: {count}
@@ -83,7 +84,7 @@ export default function ItemDetailsModal({
                   title="quantity"
                   type="range"
                   min={1}
-                  max={item.quantity}
+                  max={product.quantity}
                   value={count}
                   onChange={(e) => setCount(Number(e.target.value))}
                   className="w-full accent-primary"
@@ -96,7 +97,7 @@ export default function ItemDetailsModal({
             </p>
 
             <Button
-              disabled={item.quantity === 0}
+              disabled={product.quantity === 0}
               onClick={handleAddToCart}
             >
               Add to Cart

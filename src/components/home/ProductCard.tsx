@@ -4,17 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart } from "lucide-react";
 import Image from "next/image";
-import { DisplayItem } from "@/models/types/uiItem";
+import { Product } from "@/models/types/products";
 import { useState } from "react";
 import ItemDetailsModel from "@/components/home/ItemDetailsModal";
 
 type ProductCardProps = {
-  item: DisplayItem;
+  product: Product;
 };
 
-export default function ProductCard({ item }: ProductCardProps) {
-  const { name, price, description, images, quantity } = item;
-  const imageUrl = images[0]?.url ?? "/placeholder.png";
+export default function ProductCard({ product }: ProductCardProps) {
+  const { name, price, description, image, quantity, category } = product;
+  const isValidUrl = (url: string) => /^https?:\/\/.+\.(jpg|jpeg|png|webp|avif)$/i.test(url);
+  const imageUrl = image && isValidUrl(image) ? image : "/placeholder_image.png";
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -48,13 +49,14 @@ export default function ProductCard({ item }: ProductCardProps) {
             />
           </div>
           <h3 className="font-medium text-lg line-clamp-1">{name}</h3>
+          <p className="font-semibold">{category.name}</p>
           <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
           <p className="mt-2 font-semibold">${price.toFixed(2)}</p>
           <p className="font-semibold">Qty: {quantity}</p>
         </CardContent>
       </Card>
 
-      {isOpen && <ItemDetailsModel item={item} onClose={() => setIsOpen(false)} />}
+      {isOpen && <ItemDetailsModel product={product} onClose={() => setIsOpen(false)} />}
     </>
   );
 }

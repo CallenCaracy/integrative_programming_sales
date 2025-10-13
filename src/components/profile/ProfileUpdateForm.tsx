@@ -1,60 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
+import { toast } from "sonner";
 
-export default function ProfileUpdateForm({
-  profileId,
-  currentName,
-  currentCredit,
-}: {
-  profileId: string;
-  currentName: string;
-  currentCredit: number;
-}) {
-  const [newName, setNewName] = useState(currentName);
-  const [creditToAdd, setCreditToAdd] = useState(0);
-  const [updating, setUpdating] = useState(false);
+export default function ProfileUpdateForm() {
+  const { user, setUser } = useAuth();
+  const [credits, setCredits] = useState(user?.credit || 0);
 
-  const { updateUser } = useAuth();
+  if (!user) return null;
 
-  async function handleUpdate() {
-    setUpdating(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     try {
-      await updateUser({
-        name: newName,
-        credit: currentCredit + Number(creditToAdd || 0),
+      const res = await fetch("/api/secure/update-credits", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credit: credits }),
       });
 
-      setCreditToAdd(0);
-    } finally {
-      setUpdating(false);
+      if (res.ok) {
+        setUser({ ...user, credit: credits });
+        toast.success("Credits updated!");
+      } else {
+        toast.error("Failed to update credits");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Unknown error");
     }
-  }
+  };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Update Profile</h3>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium">New Name</label>
-        <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label>ID:</label>
+        <input title="User ID" type="text" value={user.id} disabled className="bg-gray-100" />
       </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium">Add Credits</label>
-        <Input
+      <div>
+        <label>Username:</label>
+        <input title="Username" type="text" value={user.username} disabled className="bg-gray-100" />
+      </div>
+      <div>
+        <label>Credits:</label>
+        <input
           type="number"
-          value={creditToAdd}
-          onChange={(e) => setCreditToAdd(Number(e.target.value))}
+          title="Credits"
+          value={credits}
+          onChange={(e) => setCredits(Number(e.target.value))}
+          className="border p-1"
         />
       </div>
-
-      <Button onClick={handleUpdate} disabled={updating} className="w-full">
-        {updating ? "Updating..." : "Update"}
-      </Button>
-    </div>
+      <button type="submit" className="btn-primary">Update Credits</button>
+    </form>
   );
 }

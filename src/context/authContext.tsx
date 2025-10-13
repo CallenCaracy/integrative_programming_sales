@@ -2,15 +2,15 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import jwt from "jsonwebtoken";
 
 type User = {
-  _id: string;
-  email: string;
-  name: string;
-  credit: number;
+  id: string;
+  username: string;
+  role: string;
+  credit?: number;
   access: {
-    token: string, 
-    refreshToken: string,
+    token: string,
   }
 };
 
@@ -18,10 +18,8 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   authenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (data: { name: string; email: string; password: string }) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  updateUser: (updates: Partial<User>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,8 +35,8 @@ useEffect(() => {
       const res = await fetch("/api/auth/me", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        console.log("User data just fetched:", data.currentUser)
         setUser(data.currentUser);
+        console.log("User data from server:", data.currentUser);
       } else {
         console.log("Not signed in yet!");
       }
@@ -51,48 +49,30 @@ useEffect(() => {
   fetchUser();
 }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+const login = async (username: string, password: string) => {
+  try {
+    const loginRes = await fetch("http://localhost:5249/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ username, password }),
+    });
 
-      if (res.ok) {
-        const me = await fetch("/api/auth/me", { credentials: "include" });
-        if (me.ok) {
-          const data = await me.json();
-          setUser(data.currentUser);
-        }
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error(err);
-      return false;
+    if (!loginRes.ok) return false;
+
+    const meRes = await fetch("/api/auth/me", { credentials: "include" });
+    if (meRes.ok) {
+      const data = await meRes.json();
+      setUser(data.currentUser);
+      return true;
     }
-  };
 
-  const signup = async (data: { name: string; email: string; password: string }) => {
-    try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  };
+    return false;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
 
   const logout = async () => {
     try {
@@ -105,54 +85,6 @@ useEffect(() => {
     }
   };
 
-  const refreshUser = async () => {
-  try {
-    const refresh = await fetch("/api/auth/refresh", {
-      method: "POST",
-      credentials: "include",
-    });
-    if (refresh.ok) {
-      const me = await fetch("/api/auth/me", { credentials: "include" });
-      if (me.ok) {
-        const data = await me.json();
-        console.log("Refresh response:", data);
-        setUser(data.currentUser);
-        return;
-      }
-    }
-    setUser(null);
-  } catch (err) {
-    console.error("refreshUser failed:", err);
-    setUser(null);
-  }
-};
-
-const updateUser = async (updates: Partial<User>) => {
-  if (!user?._id) return;
-
-  try {
-    const res = await fetch(`/api/secure/users/${user._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-
-    if (!res.ok) throw new Error("Failed to update user");
-
-    const updated = await res.json();
-
-    setUser((prev) => (prev ? { ...prev, ...updated } : updated));
-
-    console.log("User updated in AuthContext:", updated);
-  } catch (err) {
-    console.error("updateUser failed:", err);
-  }
-};
-
-  useEffect(() => {
-    refreshUser(); 
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
@@ -160,9 +92,7 @@ const updateUser = async (updates: Partial<User>) => {
         loading,
         authenticated: !!user,
         login,
-        signup,
         logout,
-        updateUser,
       }}
     >
       {!loading && children}

@@ -2,92 +2,50 @@
 
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
-import { DisplayItem } from "@/models/types/uiItem";
+import { Product } from "@/models/types/products";
 
-export default function ProductGrid() {
-  const [items, setItems] = useState<DisplayItem[]>([]);
-  const [loading, setLoading] = useState(false);
+type ProductGridProps = {
+  selectedCategory: string;
+};
+
+export default function ProductGrid({ selectedCategory }: ProductGridProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    let es: EventSource | null = null;
-    const controller = new AbortController();
-
-    async function fetchAndSubscribe() {
+    const fetchProducts = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const res = await fetch("/api/secure/items", {
-          cache: "no-store",
-          credentials: "include",
-          signal: controller.signal,
+        const params = new URLSearchParams({
+          "page-size": "20",
+          ...(selectedCategory !== "all" && { category: selectedCategory }),
         });
 
-        if (!res.ok) {
-          console.error("fetch /api/secure/items failed", res.status);
-          if (!mounted) return;
-          setItems([]);
-          return;
-        }
+        const res = await fetch(`/api/secure/products?${params.toString()}`, {
+          credentials: "include",
+        });
 
-        const data = await res.json();
-        if (!mounted) return;
-        setItems(data);
+        if (!res.ok) throw new Error("Failed to fetch products");
 
-        // create SSE (EventSource)
-        // NOTE: { withCredentials: true } is supported in modern browsers for credentials
-        // but if your SSE is same-origin cookies will normally be sent.
-        try {
-          es = new EventSource("/api/secure/items/stream", { withCredentials: true } as any);
-        } catch (err) {
-          // some environments don't accept the second arg; fallback to no-options
-          es = new EventSource("/api/secure/items/stream");
-        }
-
-        es.onmessage = async (e) => {
-          // minimal: re-fetch latest list on each message
-          try {
-            const r = await fetch("/api/secure/items", { cache: "no-store", credentials: "include" });
-            if (r.ok) {
-              const d = await r.json();
-              if (mounted) setItems(d);
-            } else {
-              console.warn("re-fetch failed:", r.status);
-            }
-          } catch (err) {
-            console.error("error refetching items after SSE message:", err);
-          }
-        };
-
-        es.onerror = (ev) => {
-          console.warn("SSE error, closing", ev);
-          try { es?.close(); } catch {}
-        };
-      } catch (err: any) {
-        if (err.name === "AbortError") {
-        } else {
-          console.error("Error fetching items:", err);
-        }
+        const json = await res.json();
+        setProducts(json.data || []);
+      } catch (err) {
+        console.error("Error fetching products:", err);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
-    }
-
-    fetchAndSubscribe();
-
-    return () => {
-      mounted = false;
-      controller.abort();
-      try { es?.close(); } catch {}
     };
-  }, []);
 
-  if (loading) return <p className="text-center py-10">Loading items...</p>;
-  if (items.length === 0) return <p className="text-center py-10">No items available</p>;
+    fetchProducts();
+  }, [selectedCategory]);
+
+  if (loading) return <p className="text-gray-500">Loading products...</p>;
+  if (products.length === 0) return <p className="text-gray-500">No products found.</p>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {items.map((item) => (
-        <ProductCard key={item._id} item={item} />
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
       ))}
     </div>
   );

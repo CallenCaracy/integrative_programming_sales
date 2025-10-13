@@ -4,8 +4,6 @@ import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import AddItemButton from "@/components/home/AddItemButton";
-import AddItemModal from "@/components/home/AddItemModal";
 import HomeLayout from "@/components/home/HomeLayout";
 
 import SidebarFilters from "@/components/home/SideBarFillers";
@@ -17,6 +15,7 @@ export default function Home() {
   const { authenticated, loading, user } = useAuth();
   const router = useRouter();
   const [formShowed, setFormShowed] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
     if (!loading && !authenticated) {
@@ -31,24 +30,14 @@ export default function Home() {
 
   return (
     <HomeLayout>
-      <div className="flex justify-end p-6">
-        <AddItemButton onClick={() => setFormShowed(true)} />
-      </div>
-
-      {formShowed && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <AddItemModal onClose={() => setFormShowed(false)} />
-        </div>
-      )}
-
       <div className="flex gap-6 p-6">
         <aside className="w-64 shrink-0">
           <SidebarFilters />
         </aside>
 
         <main className="flex-1">
-          <CategoryTabs />
-          <ProductGrid />
+          <CategoryTabs onCategorySelect={setSelectedCategory} />
+          <ProductGrid selectedCategory={selectedCategory} />
         </main>
       </div>
     </HomeLayout>

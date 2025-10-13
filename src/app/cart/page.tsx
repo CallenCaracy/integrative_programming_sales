@@ -9,19 +9,19 @@ import { toast } from "sonner";
 
 function CartSummary({
   subtotal,
-  items,
+  products,
 }: {
   subtotal: number;
-  items: {
-    itemId: string;
+  products: {
+    productID: number;
     name: string;
     price: number;
     quantity: number;
-    sellerId: string;
-    images: { url: string; public_id: string }[];
+    seller: string;
+    image: string;
   }[];
 }) {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const {clearCart} = useCart();
   const router = useRouter();
   const userCredit = user?.credit ?? 0;
@@ -39,14 +39,14 @@ function CartSummary({
         return;
       }
 
-      console.log("USER ID IN CART:", user?._id)
+      console.log("USER ID IN CART:", user?.id)
       const response = await fetch("/api/secure/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cartRef: crypto.randomUUID(), 
-          buyerId: user?._id,     
-          items,
+          buyerId: user?.id,     
+          products,
           totalPrice: subtotal,
         }),
       });
@@ -55,16 +55,7 @@ function CartSummary({
         throw new Error(`Failed to complete purchase: ${response.statusText}`);
       }
 
-      const updateRes = await fetch(`/api/secure/users/${user._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credit: user.credit - subtotal }),
-      });
-
-      if (!updateRes.ok) throw new Error("Failed to update user credits");
-
-      const updatedUser = await updateRes.json();
-      await updateUser(updatedUser);
+      //Decide if we add credit deduction in run time or none at all
 
       const data = await response.json();
       router.push("/dashboard")
@@ -113,14 +104,14 @@ function CartSummary({
 }
 
 export default function CartPage() {
-  const { cart, removeItem } = useCart();
+  const { cart, removeProduct } = useCart();
 
-  const subtotal = cart.items.reduce(
+  const subtotal = cart.products.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
 
-  if (cart.items.length === 0) {
+  if (cart.products.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p className="text-muted-foreground text-lg">Your cart is empty.</p>
@@ -132,20 +123,20 @@ export default function CartPage() {
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
       <h1 className="text-3xl font-bold text-center mb-6">Shopping Cart</h1>
       <div className="space-y-4">
-        {cart.items.map((cartItem, index) => (
+        {cart.products.map((cartItem, index) => (
           <CartItemCard
             key={index}
-            id={cartItem.itemId}
+            id={cartItem.productID}
             name={cartItem.name}
             price={cartItem.price}
             quantity={cartItem.quantity}
-            image={cartItem.images}
-            onRemove={() => removeItem(cartItem.itemId)}
+            image={cartItem.image}
+            onRemove={() => removeProduct(cartItem.productID)}
           />
         ))}
       </div>
 
-      <CartSummary subtotal={subtotal} items={cart.items} />
+      <CartSummary subtotal={subtotal} products={cart.products} />
     </div>
   );
 }
