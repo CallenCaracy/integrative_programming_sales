@@ -37,10 +37,12 @@ export default function ProductGrid() {
         // NOTE: { withCredentials: true } is supported in modern browsers for credentials
         // but if your SSE is same-origin cookies will normally be sent.
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           es = new EventSource("/api/secure/items/stream", { withCredentials: true } as any);
         } catch (err) {
           // some environments don't accept the second arg; fallback to no-options
           es = new EventSource("/api/secure/items/stream");
+          console.error(err)
         }
 
         es.onmessage = async (e) => {
@@ -62,6 +64,7 @@ export default function ProductGrid() {
           console.warn("SSE error, closing", ev);
           try { es?.close(); } catch {}
         };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (err.name === "AbortError") {
         } else {
