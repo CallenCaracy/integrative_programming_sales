@@ -16,6 +16,7 @@ export default function Home() {
   const router = useRouter();
   const [formShowed, setFormShowed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !authenticated) {
@@ -32,12 +33,12 @@ export default function Home() {
     <HomeLayout>
       <div className="flex gap-6 p-6">
         <aside className="w-64 shrink-0">
-          <SidebarFilters />
+          <SidebarFilters onPriceChange={setMaxPrice} />
         </aside>
 
         <main className="flex-1">
           <CategoryTabs onCategorySelect={setSelectedCategory} />
-          <ProductGrid selectedCategory={selectedCategory} />
+          <ProductGrid selectedCategory={selectedCategory} maxPrice={maxPrice} />
         </main>
       </div>
     </HomeLayout>
