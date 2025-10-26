@@ -28,10 +28,6 @@ export default function History() {
         fetchPastOrders();
     }, [user]);
 
-    useEffect(() => {
-        console.log("pastOrders UPDATED ✅", pastOrders);
-    }, [pastOrders]);
-
     if(loading) return <p className="text-gray-500">Loading past orders...</p>;
     if(pastOrders.length === 0) return <p className="text-gray-500">No past orders found.</p>;
 
