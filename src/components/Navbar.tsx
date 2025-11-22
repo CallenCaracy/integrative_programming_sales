@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/../public/assets/shopping_cart.svg"
-import {AiOutlineShoppingCart} from "react-icons/ai";
+import { AiOutlineShoppingCart } from "react-icons/ai";
 import {Button} from "@/components/ui/button";
 import { UseAuthHook } from "@/hooks/auth";
 import { useRouter } from "next/navigation";

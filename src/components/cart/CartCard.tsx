@@ -27,6 +27,7 @@ export default function CartItemCard({ id, name, price, quantity, image, onRemov
       <div className="relative w-24 h-24 shrink-0 overflow-hidden">
         {showImage && (
           <Image
+            key={id}
             src={imageUrl}
             alt={name}
             fill

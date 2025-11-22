@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { any } from "zod/v3";
 
 export async function POST(req: NextRequest) {
   await connectToDatabase();
@@ -20,12 +21,14 @@ export async function POST(req: NextRequest) {
     await newUser.save();
 
     return NextResponse.json(newUser, { status: 201 });
-  } catch (err: any) {
-    if (err.code === 11000) {
-      return NextResponse.json(
-        { error: "Email already exists" },
-        { status: 409 }
-      );
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      if ((err as any).code === 11000) {
+        return NextResponse.json(
+          { error: "Email already exists" },
+          { status: 409 }
+        );
+      }
     }
     console.error(err);
     return NextResponse.json(

@@ -1,29 +1,17 @@
 "use client";
 
-import { useAuth } from "@/context/authContext";
+import { Profile } from "@/models/types/profile";
 
-export default function ProfileDetails() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        <p><strong>Name: John Doe</strong></p>
-        <p><strong>Email: JohnDoe@skeleton.com</strong></p>
-        <p><strong>Credits: 100.00</strong></p>
-      </div>
-    );
-  }
-
-  if (!user) {
+export default function ProfileDetails({ profile }: { profile: Profile }) {
+  if (!profile) {
     return <p className="text-muted-foreground">No profile data available.</p>;
   }
 
   return (
     <div className="space-y-2">
-      <p><strong>Name:</strong> {user.name}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Credits:</strong> {user.credit}</p>
+      <p><strong>Name:</strong> {profile.name}</p>
+      <p><strong>Email:</strong> {profile.email}</p>
+      <p><strong>Credits:</strong> {profile.credit}</p>
     </div>
   );
 }

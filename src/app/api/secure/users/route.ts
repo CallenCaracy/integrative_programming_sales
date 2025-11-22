@@ -22,41 +22,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(user);
     } catch (err) {
+        console.error(err)
         return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
-}
-
-export async function PATCH(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    await connectToDatabase();
-
-    const { id } = await params;
-
-    const body = await req.json();
-    const updatedUser = await User.findByIdAndUpdate(id, body, { new: true });
-
-    if (!updatedUser) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(updatedUser);
-}
-
-export async function DELETE(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    await connectToDatabase();
-
-    const { id } = await params;
-
-    const deletedUser = await User.findByIdAndDelete(id);
-
-    if (!deletedUser) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: "User successfully deleted.", user: deletedUser });
 }

@@ -4,15 +4,18 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
+import { Profile } from "@/models/types/profile";
 
 export default function ProfileUpdateForm({
   profileId,
   currentName,
   currentCredit,
+  onUpdated,
 }: {
   profileId: string;
   currentName: string;
   currentCredit: number;
+  onUpdated: (profile: Profile) => void;
 }) {
   const [newName, setNewName] = useState(currentName);
   const [creditToAdd, setCreditToAdd] = useState(0);
@@ -23,6 +26,7 @@ export default function ProfileUpdateForm({
   async function handleUpdate() {
     setUpdating(true);
     try {
+      console.log(profileId)
       await updateUser({
         name: newName,
         credit: currentCredit + Number(creditToAdd || 0),

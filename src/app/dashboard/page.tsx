@@ -23,7 +23,7 @@ export default function Home() {
       toast.error("Unauthorized Access");
       router.push("/login");
     }
-  }, [router, authenticated, user]);
+  }, [router, authenticated, user, loading]);
 
   if (loading) {
     return <Loader />;

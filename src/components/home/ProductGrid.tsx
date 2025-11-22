@@ -34,17 +34,14 @@ export default function ProductGrid() {
         setItems(data);
 
         // create SSE (EventSource)
-        // NOTE: { withCredentials: true } is supported in modern browsers for credentials
-        // but if your SSE is same-origin cookies will normally be sent.
         try {
-          es = new EventSource("/api/secure/items/stream", { withCredentials: true } as any);
+          es = new EventSource("/api/secure/items/stream", { withCredentials: true });
         } catch (err) {
-          // some environments don't accept the second arg; fallback to no-options
+          // Fallback for environments that don't support the second argument
           es = new EventSource("/api/secure/items/stream");
         }
 
-        es.onmessage = async (e) => {
-          // minimal: re-fetch latest list on each message
+        es.onmessage = async () => {
           try {
             const r = await fetch("/api/secure/items", { cache: "no-store", credentials: "include" });
             if (r.ok) {
@@ -53,8 +50,11 @@ export default function ProductGrid() {
             } else {
               console.warn("re-fetch failed:", r.status);
             }
-          } catch (err) {
-            console.error("error refetching items after SSE message:", err);
+          } catch (err: unknown) {
+            // Ensure the error is an instance of Error before logging
+            if (err instanceof Error) {
+              console.error("error refetching items after SSE message:", err);
+            }
           }
         };
 
@@ -62,10 +62,12 @@ export default function ProductGrid() {
           console.warn("SSE error, closing", ev);
           try { es?.close(); } catch {}
         };
-      } catch (err: any) {
-        if (err.name === "AbortError") {
-        } else {
+      } catch (err: unknown) {
+        // Handle the error in a type-safe way
+        if (err instanceof Error) {
           console.error("Error fetching items:", err);
+        } else {
+          console.error("Unknown error occurred:", err);
         }
       } finally {
         if (mounted) setLoading(false);
