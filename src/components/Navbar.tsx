@@ -44,6 +44,11 @@ export default function Navbar() {
                     Profile
                 </Link>
             </Button>
+            <Button className="bg-white text-black hover:bg-accent w-30 h-14 text-xl">
+                <Link href="/history" className="text-black">
+                    History
+                </Link>
+            </Button>
              {authenticated && (
                     <Button
                         onClick={onLogout}

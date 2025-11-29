@@ -21,7 +21,7 @@ function CartSummary({
     image: string;
   }[];
 }) {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const {clearCart} = useCart();
   const router = useRouter();
   const userCredit = user?.credit ?? 0;
@@ -55,9 +55,10 @@ function CartSummary({
         throw new Error(`Failed to complete purchase: ${response.statusText}`);
       }
 
-      //Decide if we add credit deduction in run time or none at all
-
       const data = await response.json();
+      setUser(prev =>
+        prev ? { ...prev, credit: (prev.credit || 0) - subtotal } : prev
+      );
       router.push("/dashboard")
       clearCart();
       console.log("Purchase complete:", data);
