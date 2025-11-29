@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
 
@@ -10,8 +16,8 @@ type User = {
   role: string;
   credit?: number;
   access: {
-    token: string,
-  }
+    token: string;
+  };
 };
 
 type AuthContextType = {
@@ -29,56 +35,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.currentUser);
-        console.log("User data from server:", data.currentUser);
-      } else {
-        console.log("Not signed in yet!");
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.currentUser);
+          console.log("User data from server:", data.currentUser);
+        } else {
+          console.log("Not signed in yet!");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchUser();
+  }, []);
+
+  const login = async (username: string, password: string) => {
+    try {
+      const loginRes = await fetch("http://localhost:5249/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!loginRes.ok) return false;
+
+      const meRes = await fetch("/api/auth/me", { credentials: "include" });
+      if (meRes.ok) {
+        const data = await meRes.json();
+        setUser(data.currentUser);
+        return true;
+      }
+
+      return false;
     } catch (err) {
-      console.error("Auth check failed:", err);
-    } finally {
-      setLoading(false);
+      console.error(err);
+      return false;
     }
   };
-  fetchUser();
-}, []);
-
-const login = async (username: string, password: string) => {
-  try {
-    const loginRes = await fetch("http://localhost:5249/api/v1/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!loginRes.ok) return false;
-
-    const meRes = await fetch("/api/auth/me", { credentials: "include" });
-    if (meRes.ok) {
-      const data = await meRes.json();
-      setUser(data.currentUser);
-      return true;
-    }
-
-    return false;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-};
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
       setUser(null);
-      console.log("User after logout:", user)
+      console.log("User after logout:", user);
       router.push("/login");
     } catch (err) {
       console.error("Logout failed:", err);

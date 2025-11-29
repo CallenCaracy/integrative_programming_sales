@@ -34,19 +34,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <div className="mx-auto p-5 px-20">
-          <Toaster position="top-right" richColors/>
+        <div className="mx-auto p-5 px-20">
+          <Toaster position="top-right" richColors />
           <AuthProvider>
-          <CartProvider>
-          <Navbar />
-          <StairTranstition />
-          <PageTransition>
-              {children}
-          </PageTransition>
-          <Footer/>
-          </CartProvider>
+            <CartProvider>
+              <Navbar />
+              <StairTranstition />
+              <PageTransition>{children}</PageTransition>
+              <Footer />
+            </CartProvider>
           </AuthProvider>
-      </div>
+        </div>
       </body>
     </html>
   );

@@ -22,7 +22,7 @@ export default function Home() {
       toast.error("Unauthorized Access");
       router.push("/login");
     }
-  }, [router, authenticated, user]);
+  }, [router, authenticated, user, loading]);
 
   if (loading) {
     return <Loader />;
@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <HomeLayout>
       <div className="flex gap-6 p-6">
-        <aside className="w-64 shrink-0">
+        <aside className="w-64 shrink-0 sticky top-6 h-fit">
           <SidebarFilters />
         </aside>
 

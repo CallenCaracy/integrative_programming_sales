@@ -21,7 +21,9 @@ import { toast } from "sonner";
 
 const loginSchema = z.object({
   username: z.string({ message: "Invalid username address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
 });
 
 type LoginSchema = z.infer<typeof loginSchema>;
@@ -41,7 +43,6 @@ export default function LoginPage() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
   if (!hydrated) return null;
-
 
   const onSubmit = async (values: LoginSchema) => {
     setLoading(true);
@@ -70,7 +71,7 @@ export default function LoginPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>  
+                    <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="JohnDoe" {...field} />
                     </FormControl>
@@ -85,7 +86,11 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
