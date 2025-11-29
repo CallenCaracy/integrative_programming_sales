@@ -1,43 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { Cart } from "@/models/Cart";
-import { CartItem } from "@/context/cartContext";
-import { Item } from "@/models/Items";
-import mongoose from "mongoose";
+import { CartProduct } from "@/context/cartContext";
+
+/**
+ * NOTE FOR FUTURE SCALING:
+ * When the Inventory Service is ready:
+ *  ✅ Emit WebSocket event after successful checkout
+ *  ✅ Payload: [{ productID, quantitySold }]
+ *  ✅ Inventory service listens and updates stock
+ */
 
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
-    const body = await req.json();
+    const { cartRef, buyerId, products, totalPrice } = await req.json();
 
-    const { cartRef, buyerId, items, totalPrice } = body;
-
-    const dbItems = items.map((i: CartItem) => ({
-      item: new mongoose.Types.ObjectId(i.itemId),       
-      quantity: i.quantity,
-      sellerId: i.sellerId ?? "test seller", 
+    const items = products.map((p: any) => ({
+      itemId: p.productID,
+      name: p.name,
+      price: p.price,
+      image: p.image,
+      quantity: p.quantity,
+      seller: p.seller ?? "Unknown Seller",
     }));
-    console.log("BUYER ID IN API CALL:", buyerId)
+
     const cart = await Cart.create({
       cartRef,
       buyerId,
-      items: dbItems,
+      items,
       totalPrice: totalPrice ?? 0,
     });
 
-    for (const item of items) {
-      await Item.findByIdAndUpdate(
-        item.itemId,
-        { $inc: { quantity: -item.quantity } }, 
-        { new: true }
-      );
-    }
-
     return NextResponse.json(cart, { status: 201 });
+
   } catch (error) {
-    console.error("POST /api/cart error:", error);
+    console.error("POST /api/secure/cart error:", error);
     return NextResponse.json(
-      { error: error},
+      { message: "Failed to save cart", error },
       { status: 500 }
     );
   }
@@ -50,20 +50,33 @@ export async function GET(req: NextRequest) {
     const buyerId = searchParams.get("buyerId");
 
     if (!buyerId) {
-      return NextResponse.json({ error: "buyerId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "buyerId is required" },
+        { status: 400 }
+      );
     }
 
-    const cart = await Cart.findOne({ buyerId });
+    const cart = await Cart.find({ buyerId }).sort({ createdAt: -1 });
 
-    return NextResponse.json(cart ?? { items: [], totalPrice: 0 });
-  } catch (error) {
-    console.error("GET /api/cart error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
+      { data: cart },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("GET /api/secure/cart error:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Internal server error",
+      },
       { status: 500 }
     );
   }
 }
+
 
 export async function PUT(req: NextRequest) {
   try {
@@ -76,7 +89,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const totalPrice = items.reduce(
-      (sum: number, i: CartItem) => sum + i.price * i.quantity,
+      (sum: number, i: CartProduct) => sum + i.price * i.quantity,
       0
     );
 

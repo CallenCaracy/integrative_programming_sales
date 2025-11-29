@@ -2,6 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import ProfileDetails from "@/components/profile/ProfileDetails";
+import ProfileUpdateForm from "@/components/profile/ProfileUpdateForm";
 
 export default function ProfilePage() {
   return (
@@ -17,8 +18,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-4">
-              {/* You can keep the update form, but pass current user from AuthContext */}
-              {/* e.g., <ProfileUpdateForm profile={user} /> */}
+              <ProfileUpdateForm  />
             </div>
           </div>
         </CardContent>

@@ -6,9 +6,10 @@ import { Product } from "@/models/types/products";
 
 type ProductGridProps = {
   selectedCategory: string;
+  maxPrice: number | null;
 };
 
-export default function ProductGrid({ selectedCategory }: ProductGridProps) {
+export default function ProductGrid({ selectedCategory, maxPrice }: ProductGridProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +19,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
       try {
         const params = new URLSearchParams({
           "page-size": "20",
+          ...(maxPrice !== null && { "price-range": `0-${maxPrice}` }),
           ...(selectedCategory !== "all" && { category: selectedCategory }),
         });
 
@@ -37,7 +39,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
     };
 
     fetchProducts();
-  }, [selectedCategory]);
+  }, [selectedCategory, maxPrice]);
 
   if (loading) return <p className="text-gray-500">Loading products...</p>;
   if (products.length === 0) return <p className="text-gray-500">No products found.</p>;

@@ -5,15 +5,31 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 
-export default function SidebarFilters() {
+type Props = {
+  onPriceChange?: (price: number) => void;
+}
+
+export default function SidebarFilters({ onPriceChange }: Props) {
+  const [value, setValue] = useState([300]);
+  
   return (
     <div className="space-y-6">
       {/* Price Range */}
       <div>
         <h3 className="font-semibold mb-2">Price Range</h3>
-        <Slider defaultValue={[300]} max={1130} min={20} step={10} />
-        <p className="text-sm text-muted-foreground">Avg price: $300</p>
+        <Slider
+          value={value}
+          onValueChange={(val) => {
+            setValue(val);
+            onPriceChange?.(val[0]);
+          }}
+          max={1130}
+          min={20}
+          step={10}
+        />
+        <p className="text-sm text-muted-foreground">Price range: $0 - ${value[0]}</p>
       </div>
 
       <Separator />

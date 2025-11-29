@@ -1,36 +1,36 @@
-import { Schema, Model, Types, model, models } from "mongoose";
+import { Schema, Model, model, models } from "mongoose";
 
 export interface ICart {
   cartRef: string;
-  buyerId: Types.ObjectId;
+  buyerId: number;
   totalPrice: number;
   items: {
-    item: Types.ObjectId;
+    itemId: number;
+    name: string;
+    price: number;
+    image: string;
     quantity: number;
-    sellerId: Types.ObjectId;
+    seller: string;
   }[];
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-const CartSchema = new Schema<ICart>(
-  {
-    cartRef: { type: String, required: true, unique: true }, 
-    buyerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    totalPrice: { type: Number, required: true },
-    items: [
-      {
-        item: { type: Schema.Types.ObjectId, ref: "Item", required: true },
-        quantity: { type: Number, required: true, default: 1, min: 1 },
-        sellerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      },
-    ],
-  },
-  { timestamps: true }
-);
-
-CartSchema.index({ buyerId: 1 });
-CartSchema.index({ cartRef: 1 });
+const CartSchema = new Schema<ICart>({
+  cartRef: { type: String, required: true, unique: true },
+  buyerId: { type: Schema.Types.Mixed, required: true }, // string or number
+  totalPrice: { type: Number, required: true },
+  items: [
+    {
+      itemId: { type: Number, required: true },
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+      image: { type: String, required: true },
+      quantity: { type: Number, required: true, default: 1, min: 1 },
+      seller: { type: String, required: true },
+    },
+  ],
+}, { timestamps: true });
 
 export const Cart: Model<ICart> =
   models.Cart || model<ICart>("Cart", CartSchema);
