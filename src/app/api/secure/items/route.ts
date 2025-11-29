@@ -25,7 +25,13 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    console.log("Incoming form data:", { name, description, price, quantity, file });
+    console.log("Incoming form data:", {
+      name,
+      description,
+      price,
+      quantity,
+      file,
+    });
     const uploadRes = await new Promise<{ url: string; public_id: string }>(
       (resolve, reject) => {
         cloudinary.uploader
@@ -46,29 +52,34 @@ export async function POST(req: NextRequest) {
       price,
       quantity,
       sellerId,
-      images: [uploadRes], 
+      images: [uploadRes],
     });
 
     await newItem.save();
 
     return NextResponse.json(newItem, { status: 201 });
   } catch (error) {
-  console.error("Error creating item:", error);
-  return NextResponse.json(
-    { error: error instanceof Error ? error.message : "Internal Server Error" },
-    { status: 500 }
-  );
-}
+    console.error("Error creating item:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal Server Error",
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET() {
-    await connectToDatabase();
+  await connectToDatabase();
 
-    try {
-        const items = await Item.find({});
-        return NextResponse.json(items);
-    } catch (err) {
-        console.error("Error fetching items:", err);
-        return NextResponse.json({ error: "Failed to fetch items" }, { status: 500 });
-    }
+  try {
+    const items = await Item.find({});
+    return NextResponse.json(items);
+  } catch (err) {
+    console.error("Error fetching items:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch items" },
+      { status: 500 }
+    );
+  }
 }
