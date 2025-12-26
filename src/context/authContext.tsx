@@ -25,6 +25,7 @@ type AuthContextType = {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   authenticated: boolean;
+  token?: string;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...data.currentUser,
             credit: 1000, // static injected value since inventory auth server doesn't provide it
           });
+          setToken(data.token);
           console.log("User data from server:", data.currentUser);
         } else {
           console.log("Not signed in yet!");
@@ -73,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (meRes.ok) {
         const data = await meRes.json();
         setUser(data.currentUser);
+        setToken(data.token);
         return true;
       }
 
@@ -103,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         setUser,
         loading,
+        token: token || undefined,
         authenticated: !!user,
         login,
         logout,

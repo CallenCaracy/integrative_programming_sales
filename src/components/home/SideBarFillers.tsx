@@ -102,13 +102,6 @@ export default function SidebarFilters({ onPriceChange }: Props) {
           <div>
             <Chat />
           </div>
-          <SheetFooter>
-            <div className="flex gap-2">
-              <SheetClose asChild>
-                <Button variant="outline">Close</Button>
-              </SheetClose>
-            </div>
-          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>
