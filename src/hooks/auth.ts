@@ -7,7 +7,7 @@ type AuthValues = {
 };
 
 export function UseAuthHook() {
-  const { login, logout } = useAuth()
+  const { login, logout } = useAuth();
 
   const handleLogin = async (values: AuthValues): Promise<boolean> => {
     try {
