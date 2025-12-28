@@ -70,7 +70,7 @@ export default function LoginPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>  
+                    <FormLabel>Username</FormLabel>  
                     <FormControl>
                       <Input type="text" placeholder="JohnDoe" {...field} />
                     </FormControl>

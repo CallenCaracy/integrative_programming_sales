@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 import { useCart } from "@/context/cartContext";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 //
 
@@ -23,12 +24,14 @@ function CartSummary({
 }) {
   const { user, setUser } = useAuth();
   const {clearCart} = useCart();
+  const [ isLoading, setLoading ] = useState(false);
   const router = useRouter();
   const userCredit = user?.credit ?? 0;
   const hasEnoughCredit = userCredit >= subtotal;
 
   const handleCompletePurchase = async () => {
     try {
+      setLoading(true);
       if (!user) {
         toast.error("You must be logged in to complete a purchase.");
         return;
@@ -62,6 +65,7 @@ function CartSummary({
       router.push("/dashboard")
       clearCart();
       console.log("Purchase complete:", data);
+      setLoading(false);
       toast.success("Purchase completed successfully!");
     } catch (err) {
       console.error(err);
@@ -98,7 +102,11 @@ function CartSummary({
         onClick={handleCompletePurchase}
         disabled={!hasEnoughCredit}
       >
-        {hasEnoughCredit ? "Complete Purchase" : "Insufficient Credits"}
+        {isLoading
+        ? "Processing..."
+        : hasEnoughCredit
+        ? "Complete Purchase"
+        : "Insufficient Credits"}
       </Button>
     </div>
   );
