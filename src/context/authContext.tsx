@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
 
@@ -10,8 +16,8 @@ type User = {
   role: string;
   credit?: number;
   access: {
-    token: string,
-  }
+    token: string;
+  };
 };
 
 type AuthContextType = {
@@ -19,6 +25,7 @@ type AuthContextType = {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   authenticated: boolean;
+  token?: string;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -28,61 +35,66 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
-useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setUser({
-          ...data.currentUser,
-          credit: 1000 // static injected value since inventory auth server doesn't provide it
-        });
-        console.log("User data from server:", data.currentUser);
-      } else {
-        console.log("Not signed in yet!");
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setUser({
+            ...data.currentUser,
+            credit: 1000, // static injected value since inventory auth server doesn't provide it
+          });
+          setToken(data.token);
+          console.log("User data from server:", data.currentUser);
+        } else {
+          console.log("Not signed in yet!");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchUser();
+  }, []);
+
+  const login = async (username: string, password: string) => {
+    try {
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!loginRes.ok) return false;
+
+      const meRes = await fetch("/api/auth/me", { credentials: "include" });
+      if (meRes.ok) {
+        const data = await meRes.json();
+        setUser(data.currentUser);
+        setToken(data.token);
+        return true;
+      }
+
+      return false;
     } catch (err) {
-      console.error("Auth check failed:", err);
-    } finally {
-      setLoading(false);
+      console.error(err);
+      return false;
     }
   };
-  fetchUser();
-}, []);
-
-const login = async (username: string, password: string) => {
-  try {
-    const loginRes = await fetch("http://localhost:5249/api/v1/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!loginRes.ok) return false;
-
-    const meRes = await fetch("/api/auth/me", { credentials: "include" });
-    if (meRes.ok) {
-      const data = await meRes.json();
-      setUser(data.currentUser);
-      return true;
-    }
-
-    return false;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-};
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
       setUser(null);
-      console.log("User after logout:", user)
+      console.log("User after logout:", user);
       router.push("/login");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -95,6 +107,7 @@ const login = async (username: string, password: string) => {
         user,
         setUser,
         loading,
+        token: token || undefined,
         authenticated: !!user,
         login,
         logout,

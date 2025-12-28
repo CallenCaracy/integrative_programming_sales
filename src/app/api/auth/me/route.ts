@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
 
   try {
     const decoded = jwt.verify(cookie, JWT_SECRET);
-    return NextResponse.json({ currentUser: decoded });
+    return NextResponse.json(
+      { currentUser: decoded, token: cookie },
+      { status: 200 }
+    );
   } catch (err) {
     return NextResponse.json({ message: "Invalid token" }, { status: 401 });
   }

@@ -6,14 +6,26 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
+import { Button } from "../ui/button";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
+import { Chat } from "../Chat";
 
 type Props = {
   onPriceChange?: (price: number) => void;
-}
+};
 
 export default function SidebarFilters({ onPriceChange }: Props) {
   const [value, setValue] = useState([300]);
-  
+
   return (
     <div className="space-y-6">
       {/* Price Range */}
@@ -29,7 +41,9 @@ export default function SidebarFilters({ onPriceChange }: Props) {
           min={20}
           step={10}
         />
-        <p className="text-sm text-muted-foreground">Price range: $0 - ${value[0]}</p>
+        <p className="text-sm text-muted-foreground">
+          Price range: $0 - ${value[0]}
+        </p>
       </div>
 
       <Separator />
@@ -72,6 +86,24 @@ export default function SidebarFilters({ onPriceChange }: Props) {
           </div>
         </RadioGroup>
       </div>
+      <Separator />
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button className="bg-white hover:bg-accent text-black cursor-pointer">
+            <span className="text-xl">Contact Kentward</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="center" className="p-4">
+          <VisuallyHidden>
+            <SheetHeader>
+              <SheetTitle>Chat</SheetTitle>
+            </SheetHeader>
+          </VisuallyHidden>
+          <div>
+            <Chat />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
