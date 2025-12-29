@@ -103,7 +103,7 @@ export default function History() {
                         <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                         {product ? (
                             <img
-                            src={product.imageUrl}
+                            src={imageUrl}
                             alt={product.name}
                             className="w-full h-full object-cover"
                             />
