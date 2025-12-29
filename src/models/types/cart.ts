@@ -1,8 +1,5 @@
 export type CartProduct = {
-  productId: string;
-  name: string;
-  quantity: number;
-  image: string;
+  itemId: number;
 };
 
 export type Cart = {

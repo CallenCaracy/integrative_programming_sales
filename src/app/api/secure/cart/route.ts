@@ -3,15 +3,13 @@ import connectToDatabase from "@/lib/mongodb";
 import { Cart } from "@/models/Cart";
 import { CartProduct } from "@/context/cartContext";
 
-/**
- * NOTE FOR FUTURE SCALING:
- * When the Inventory Service is ready:
- *  ✅ Emit WebSocket event after successful checkout
- *  ✅ Payload: [{ productID, quantitySold }]
- *  ✅ Inventory service listens and updates stock
- */
 
 export async function POST(req: NextRequest) {
+  const cookie = req.cookies.get("access_token")?.value;
+  if (!cookie) {
+    return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+  }
+
   try {
     await connectToDatabase();
     const { cartRef, buyerId, products, totalPrice } = await req.json();
@@ -32,7 +30,31 @@ export async function POST(req: NextRequest) {
       totalPrice: totalPrice ?? 0,
     });
 
-    return NextResponse.json(cart, { status: 201 });
+    const updatePayload = products.map((p: { productID: any; name: any; quantity: any; }) => ({
+      id: p.productID,
+      name: p.name,
+      quantity: -Math.abs(p.quantity)
+    }));
+
+    const patchResponse = await fetch("http://localhost:5249/api/v1/products/update-quantity-bulk", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${cookie}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatePayload),
+    });
+
+        if (!patchResponse.ok) {
+      return NextResponse.json(
+        { message: "Failed to update inventory", status: patchResponse.status },
+        { status: patchResponse.status }
+      );
+    }
+
+    const inventoryUpdateResult = await patchResponse.json();
+
+    return NextResponse.json({ cart, inventoryUpdateResult }, { status: 201 });
 
   } catch (error) {
     console.error("POST /api/secure/cart error:", error);
